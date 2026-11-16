@@ -1,0 +1,142 @@
+services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: strapi-blog-nginx
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_healthy
+    networks:
+      - blog-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: strapi-blog-backend
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOST: 0.0.0.0
+      PORT: 1337
+      NODE_ENV: production
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:8080}
+      DATABASE_CLIENT: ${DATABASE_CLIENT:-sqlite}
+      DATABASE_FILENAME: ${DATABASE_FILENAME:-/app/data/data.db}
+      DATABASE_HOST: ${DATABASE_HOST:-postgres}
+      DATABASE_PORT: ${DATABASE_PORT:-5432}
+      DATABASE_NAME: ${DATABASE_NAME:-strapi_blog}
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-strapi}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-change_me_db_password}
+      DATABASE_SCHEMA: ${DATABASE_SCHEMA:-public}
+      DATABASE_SSL: ${DATABASE_SSL:-false}
+      DATABASE_SSL_REJECT_UNAUTHORIZED: ${DATABASE_SSL_REJECT_UNAUTHORIZED:-true}
+      APP_KEYS: ${APP_KEYS:-}
+      API_TOKEN_SALT: ${API_TOKEN_SALT:-}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-}
+      TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT:-}
+      JWT_SECRET: ${JWT_SECRET:-}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+      STRAPI_MCP_ENABLED: ${STRAPI_MCP_ENABLED:-true}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+      DEFAULT_LOCALE: ${DEFAULT_LOCALE:-zh-Hans}
+      SUPPORTED_LOCALES: ${SUPPORTED_LOCALES:-zh-Hans,en}
+      COMMENTS_REQUIRE_APPROVAL: ${COMMENTS_REQUIRE_APPROVAL:-false}
+    volumes:
+      - strapi_data:/app/data
+      - strapi_uploads:/app/public/uploads
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:1337/_health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - blog-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: strapi-blog-frontend
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      STRAPI_INTERNAL_URL: ${STRAPI_INTERNAL_URL:-http://backend:1337}
+      STRAPI_PUBLIC_URL: ${STRAPI_PUBLIC_URL:-}
+      STRAPI_API_TOKEN: ${STRAPI_API_TOKEN:-}
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:8080}
+      DEFAULT_LOCALE: ${DEFAULT_LOCALE:-zh-Hans}
+      SUPPORTED_LOCALES: ${SUPPORTED_LOCALES:-zh-Hans,en}
+      DEFAULT_SITE_SLUG: ${DEFAULT_SITE_SLUG:-}
+      NEXT_PUBLIC_PORTAL_NAME: ${NEXT_PUBLIC_PORTAL_NAME:-Strapi Multi-Site Blog}
+      NEXT_PUBLIC_COMMENTS_ENABLED: ${NEXT_PUBLIC_COMMENTS_ENABLED:-true}
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - blog-network
+
+  # Optional PostgreSQL (activate with: docker compose --profile postgres up -d)
+  postgres:
+    image: postgres:16-alpine
+    container_name: strapi-blog-postgres
+    restart: unless-stopped
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:-strapi_blog}
+      POSTGRES_USER: ${DATABASE_USERNAME:-strapi}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-change_me_db_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-strapi} -d ${DATABASE_NAME:-strapi_blog}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blog-network
+
+  # Optional MySQL (activate with: docker compose --profile mysql up -d)
+  mysql:
+    image: mysql:8.4
+    container_name: strapi-blog-mysql
+    restart: unless-stopped
+    profiles: ["mysql"]
+    environment:
+      MYSQL_DATABASE: ${DATABASE_NAME:-strapi_blog}
+      MYSQL_USER: ${DATABASE_USERNAME:-strapi}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD:-change_me_db_password}
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD:-change_me_root_password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blog-network
+
+volumes:
+  strapi_data:
+  strapi_uploads:
+  postgres_data:
+  mysql_data:
+
+networks:
+  blog-network:
+    driver: bridge

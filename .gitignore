@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+.next/
+dist/
+build/
+out/
+backend/.tmp/
+backend/.strapi/
+backend/public/uploads/*
+!backend/public/uploads/.gitkeep
+
+# Docker local data
+data/
+
+# Logs & OS
+*.log
+.DS_Store
+Thumbs.db

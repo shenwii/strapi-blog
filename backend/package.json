@@ -1,0 +1,37 @@
+{
+  "name": "strapi-blog-backend",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Out-of-the-box multi-site Strapi v5 blog backend with MCP, i18n, Markdown, and Comments",
+  "scripts": {
+    "build": "strapi build",
+    "console": "strapi console",
+    "deploy": "strapi deploy",
+    "dev": "strapi develop",
+    "develop": "strapi develop",
+    "start": "strapi start",
+    "strapi": "strapi"
+  },
+  "dependencies": {
+    "@strapi/plugin-users-permissions": "^5.61.0",
+    "@strapi/strapi": "^5.61.0",
+    "better-sqlite3": "^12.0.0",
+    "mysql2": "^3.11.0",
+    "pg": "^8.13.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "strapi-plugin-comments": "^3.0.0",
+    "styled-components": "^6.1.13"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=22.0.0 <27.0.0",
+    "npm": ">=10.0.0"
+  }
+}
