@@ -92,7 +92,7 @@ services:
 
   # Optional PostgreSQL (activate with: docker compose --profile postgres up -d)
   postgres:
-    image: postgres:16-alpine
+    image: docker.io/library/postgres:16-alpine
     container_name: strapi-blog-postgres
     restart: unless-stopped
     profiles: ["postgres"]
@@ -112,7 +112,7 @@ services:
 
   # Optional MySQL (activate with: docker compose --profile mysql up -d)
   mysql:
-    image: mysql:8.4
+    image: docker.io/library/mysql:8.4
     container_name: strapi-blog-mysql
     restart: unless-stopped
     profiles: ["mysql"]

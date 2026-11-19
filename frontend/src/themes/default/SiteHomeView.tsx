@@ -21,10 +21,9 @@ export function SiteHomeView({
 }: SiteHomeViewProps) {
   const accent = site.accentColor || '#0ea5e9';
   const coverUrl = resolveMediaUrl(site.cover?.url);
-  const [featuredArticle, ...restArticles] =
-    pagination.page === 1 && articles.length > 0 && articles[0].featured ? articles : [null, ...articles];
-
-  const listArticles = featuredArticle ? restArticles : articles;
+  const hasFeatured = pagination.page === 1 && articles.length > 0 && Boolean(articles[0].featured);
+  const featuredArticle = hasFeatured ? articles[0] : null;
+  const listArticles = hasFeatured ? articles.slice(1) : articles;
 
   return (
     <div
