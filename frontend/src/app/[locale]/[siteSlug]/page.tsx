@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getSupportedLocales } from '@/lib/env';
+import { getDefaultTheme, getSupportedLocales } from '@/lib/env';
 import { getDictionary, normalizeLocale } from '@/lib/i18n';
 import {
   getArticles,
@@ -9,7 +9,7 @@ import {
   getSiteBySlug,
   getSites,
 } from '@/lib/strapi';
-import { activeTheme } from '@/themes';
+import { getTheme } from '@/themes';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,7 +55,7 @@ export default async function SiteHomePage({
     notFound();
   }
 
-  const { SiteHomeView } = activeTheme;
+  const { SiteHomeView } = getTheme(site.theme || global?.defaultTheme || getDefaultTheme());
 
   return (
     <SiteHomeView

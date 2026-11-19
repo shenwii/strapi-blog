@@ -30,6 +30,7 @@ export interface GlobalConfig {
   portalSubtitle?: string | null;
   footerText?: string | null;
   defaultSiteSlug?: string | null;
+  defaultTheme?: string | null;
   seo?: StrapiSeo | null;
 }
 
@@ -42,6 +43,7 @@ export interface Site {
   tagline?: string | null;
   description?: string | null;
   accentColor?: string | null;
+  theme?: string | null;
   sortOrder?: number;
   cover?: StrapiMedia | null;
   navLinks?: NavLink[];

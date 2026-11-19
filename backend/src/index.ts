@@ -12,12 +12,14 @@ const LOCALE_NAMES: Record<string, string> = {
 };
 
 function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '') || `item-${Date.now()}`;
+  return (
+    input
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '') || `item-${Date.now()}`
+  );
 }
 
 async function ensureLocales(strapi: Core.Strapi, locales: string[], defaultLocale: string) {
@@ -87,7 +89,6 @@ async function ensurePublicPermissions(strapi: Core.Strapi) {
         actionsToGrant.add(`plugin::comments.client.${actionKey}`);
       }
     } else {
-      // Fallback common action names for strapi-plugin-comments v3
       for (const actionKey of ['findAllInHierarchy', 'findAllFlat', 'post', 'reportAbuse']) {
         actionsToGrant.add(`plugin::comments.client.${actionKey}`);
       }
@@ -125,23 +126,28 @@ async function seedDemoData(strapi: Core.Strapi, locales: string[]) {
     return;
   }
 
-  strapi.log.info('[Bootstrap] Seeding initial demo sites, categories, tags, and Markdown posts...');
+  strapi.log.info('[Bootstrap] Seeding initial /life demo site and sample Markdown post...');
 
   const hasZh = locales.includes('zh-Hans');
   const hasEn = locales.includes('en');
   const primaryLocale = hasZh ? 'zh-Hans' : locales[0] || 'en';
+  const defaultTheme = (process.env.DEFAULT_THEME || 'default').trim();
+  const validTheme = ['default', 'warm', 'anime', 'cyber'].includes(defaultTheme)
+    ? defaultTheme
+    : 'default';
 
   // 1. Seed Global config
   const globalDoc = await strapi.documents('api::global.global').create({
     locale: primaryLocale,
     data: {
-      portalTitle: primaryLocale === 'zh-Hans' ? '多站点博客矩阵' : 'Multi-Site Blog Hub',
+      portalTitle: primaryLocale === 'zh-Hans' ? '多站点博客空间' : 'Multi-Site Blog',
       portalSubtitle:
         primaryLocale === 'zh-Hans'
           ? '基于 Strapi v5 与 Next.js 构建的开箱即用多站点 Markdown 博客系统'
           : 'An out-of-the-box multi-site Markdown blog powered by Strapi v5 & Next.js',
       footerText: 'Powered by Strapi v5 & Next.js',
       defaultSiteSlug: process.env.DEFAULT_SITE_SLUG || '',
+      defaultTheme: validTheme,
     },
   });
 
@@ -150,61 +156,16 @@ async function seedDemoData(strapi: Core.Strapi, locales: string[]) {
       documentId: globalDoc.documentId,
       locale: 'en',
       data: {
-        portalTitle: 'Multi-Site Blog Hub',
+        portalTitle: 'Multi-Site Blog',
         portalSubtitle: 'An out-of-the-box multi-site Markdown blog powered by Strapi v5 & Next.js',
         footerText: 'Powered by Strapi v5 & Next.js',
         defaultSiteSlug: process.env.DEFAULT_SITE_SLUG || '',
+        defaultTheme: validTheme,
       },
     });
   }
 
-  // 2. Seed Sites: /home-assistant & /life
-  const haSite = await strapi.documents('api::site.site').create({
-    locale: primaryLocale,
-    data: {
-      name: primaryLocale === 'zh-Hans' ? 'Home Assistant 实验室' : 'Home Assistant Lab',
-      slug: 'home-assistant',
-      badge: primaryLocale === 'zh-Hans' ? '智能家居' : 'Smart Home',
-      tagline:
-        primaryLocale === 'zh-Hans'
-          ? '自动化脚本、Zigbee / ESPHome 硬件折腾与全屋智能实战'
-          : 'Automations, Zigbee, ESPHome hardware tinkering & smart home guides',
-      description:
-        primaryLocale === 'zh-Hans'
-          ? '专注于 Home Assistant 家庭自动化平台的技术专栏，分享实用的 YAML 配置、设备接入方案与本地化隐私玩法。'
-          : 'Dedicated to Home Assistant local-first home automation, practical YAML blueprints, and sensor DIY.',
-      accentColor: '#0ea5e9',
-      sortOrder: 1,
-      navLinks: [
-        { label: primaryLocale === 'zh-Hans' ? '全部文章' : 'Posts', href: '/home-assistant', isExternal: false },
-        { label: primaryLocale === 'zh-Hans' ? '生活手记' : 'Life Journal', href: '/life', isExternal: false },
-      ],
-    },
-  });
-  await strapi.documents('api::site.site').publish({ documentId: haSite.documentId, locale: primaryLocale });
-
-  if (hasZh && hasEn) {
-    await strapi.documents('api::site.site').create({
-      documentId: haSite.documentId,
-      locale: 'en',
-      data: {
-        name: 'Home Assistant Lab',
-        slug: 'home-assistant',
-        badge: 'Smart Home',
-        tagline: 'Automations, Zigbee, ESPHome hardware tinkering & smart home guides',
-        description:
-          'Dedicated to Home Assistant local-first home automation, practical YAML blueprints, and sensor DIY.',
-        accentColor: '#0ea5e9',
-        sortOrder: 1,
-        navLinks: [
-          { label: 'Posts', href: '/home-assistant', isExternal: false },
-          { label: 'Life Journal', href: '/life', isExternal: false },
-        ],
-      },
-    });
-    await strapi.documents('api::site.site').publish({ documentId: haSite.documentId, locale: 'en' });
-  }
-
+  // 2. Seed single clean default Site: /life
   const lifeSite = await strapi.documents('api::site.site').create({
     locale: primaryLocale,
     data: {
@@ -213,17 +174,17 @@ async function seedDemoData(strapi: Core.Strapi, locales: string[]) {
       badge: primaryLocale === 'zh-Hans' ? '生活方式' : 'Lifestyle',
       tagline:
         primaryLocale === 'zh-Hans'
-          ? '咖啡、旅行、摄影与日常思考的慢节奏空间'
-          : 'Slow notes on coffee, travel, photography, and everyday reflections',
+          ? '记录日常灵感、阅读随笔、旅行见闻与慢节奏思考'
+          : 'Notes on everyday inspiration, reading essays, travel, and slow living',
       description:
         primaryLocale === 'zh-Hans'
-          ? '脱离代码与硬件的日常随笔，记录城市漫步、手冲咖啡风味笔记与阅读感悟。'
-          : 'Personal essays away from code—capturing city walks, pour-over coffee logs, and book reflections.',
+          ? '这是默认初始化的示例博客站点（/life）。你可以在 Strapi 管理后台修改它的主题风格、名称，或继续创建更多独立的子站点。'
+          : 'This is the default starter blog site (/life). Customize its theme and branding or add more sites anytime in Strapi Admin.',
       accentColor: '#f59e0b',
-      sortOrder: 2,
+      theme: validTheme,
+      sortOrder: 1,
       navLinks: [
-        { label: primaryLocale === 'zh-Hans' ? '随笔目录' : 'Essays', href: '/life', isExternal: false },
-        { label: 'Home Assistant', href: '/home-assistant', isExternal: false },
+        { label: primaryLocale === 'zh-Hans' ? '全部文章' : 'Posts', href: '/life', isExternal: false },
       ],
     },
   });
@@ -237,39 +198,25 @@ async function seedDemoData(strapi: Core.Strapi, locales: string[]) {
         name: 'Life Journal',
         slug: 'life',
         badge: 'Lifestyle',
-        tagline: 'Slow notes on coffee, travel, photography, and everyday reflections',
+        tagline: 'Notes on everyday inspiration, reading essays, travel, and slow living',
         description:
-          'Personal essays away from code—capturing city walks, pour-over coffee logs, and book reflections.',
+          'This is the default starter blog site (/life). Customize its theme and branding or add more sites anytime in Strapi Admin.',
         accentColor: '#f59e0b',
-        sortOrder: 2,
-        navLinks: [
-          { label: 'Essays', href: '/life', isExternal: false },
-          { label: 'Home Assistant', href: '/home-assistant', isExternal: false },
-        ],
+        theme: validTheme,
+        sortOrder: 1,
+        navLinks: [{ label: 'Posts', href: '/life', isExternal: false }],
       },
     });
     await strapi.documents('api::site.site').publish({ documentId: lifeSite.documentId, locale: 'en' });
   }
 
-  // 3. Seed Categories
-  const haCat = await strapi.documents('api::category.category').create({
-    locale: primaryLocale,
-    data: {
-      name: primaryLocale === 'zh-Hans' ? '自动化实战' : 'Automations',
-      slug: 'automations',
-      description:
-        primaryLocale === 'zh-Hans' ? 'Home Assistant YAML 自动化与场景联动' : 'YAML automations & smart scenes',
-      site: haSite.documentId,
-    },
-  });
-  await strapi.documents('api::category.category').publish({ documentId: haCat.documentId, locale: primaryLocale });
-
+  // 3. Seed Category
   const lifeCat = await strapi.documents('api::category.category').create({
     locale: primaryLocale,
     data: {
       name: primaryLocale === 'zh-Hans' ? '日常随笔' : 'Essays',
       slug: 'essays',
-      description: primaryLocale === 'zh-Hans' ? '生活中的小确幸与思考' : 'Everyday stories & thoughts',
+      description: primaryLocale === 'zh-Hans' ? '生活记录、思考与分享' : 'Everyday stories & reflections',
       site: lifeSite.documentId,
     },
   });
@@ -277,268 +224,151 @@ async function seedDemoData(strapi: Core.Strapi, locales: string[]) {
 
   if (hasZh && hasEn) {
     await strapi.documents('api::category.category').create({
-      documentId: haCat.documentId,
-      locale: 'en',
-      data: {
-        name: 'Automations',
-        slug: 'automations',
-        description: 'YAML automations & smart scenes',
-        site: haSite.documentId,
-      },
-    });
-    await strapi.documents('api::category.category').publish({ documentId: haCat.documentId, locale: 'en' });
-
-    await strapi.documents('api::category.category').create({
       documentId: lifeCat.documentId,
       locale: 'en',
       data: {
         name: 'Essays',
         slug: 'essays',
-        description: 'Everyday stories & thoughts',
+        description: 'Everyday stories & reflections',
         site: lifeSite.documentId,
       },
     });
     await strapi.documents('api::category.category').publish({ documentId: lifeCat.documentId, locale: 'en' });
   }
 
-  // 4. Seed Tags
-  const tagHa = await strapi.documents('api::tag.tag').create({
+  // 4. Seed Tag
+  const tagGettingStarted = await strapi.documents('api::tag.tag').create({
     locale: primaryLocale,
-    data: { name: 'Home Assistant', slug: 'home-assistant' },
+    data: { name: primaryLocale === 'zh-Hans' ? '快速开始' : 'Getting Started', slug: 'getting-started' },
   });
-  await strapi.documents('api::tag.tag').publish({ documentId: tagHa.documentId, locale: primaryLocale });
-
-  const tagCoffee = await strapi.documents('api::tag.tag').create({
+  await strapi.documents('api::tag.tag').publish({
+    documentId: tagGettingStarted.documentId,
     locale: primaryLocale,
-    data: { name: primaryLocale === 'zh-Hans' ? '手冲咖啡' : 'Coffee', slug: 'coffee' },
   });
-  await strapi.documents('api::tag.tag').publish({ documentId: tagCoffee.documentId, locale: primaryLocale });
 
   if (hasZh && hasEn) {
     await strapi.documents('api::tag.tag').create({
-      documentId: tagHa.documentId,
+      documentId: tagGettingStarted.documentId,
       locale: 'en',
-      data: { name: 'Home Assistant', slug: 'home-assistant' },
+      data: { name: 'Getting Started', slug: 'getting-started' },
     });
-    await strapi.documents('api::tag.tag').publish({ documentId: tagHa.documentId, locale: 'en' });
-
-    await strapi.documents('api::tag.tag').create({
-      documentId: tagCoffee.documentId,
+    await strapi.documents('api::tag.tag').publish({
+      documentId: tagGettingStarted.documentId,
       locale: 'en',
-      data: { name: 'Coffee', slug: 'coffee' },
     });
-    await strapi.documents('api::tag.tag').publish({ documentId: tagCoffee.documentId, locale: 'en' });
   }
 
-  // 5. Seed Sample Markdown Articles
-  const haArticleZh = `## 为什么选择本地化智能家居？
+  // 5. Seed generic Markdown Welcome Article
+  const welcomeZh = `## 欢迎使用 Strapi Multi-Site Blog
 
-把传感器的每一条状态都交给云端，不仅会有延迟，还可能因为断网导致全屋自动化瘫痪。使用 **Home Assistant** 搭配 Zigbee2MQTT，所有控制指令都在局域网内毫秒级响应。
+恭喜！你的博客已经成功跑起来了。这是默认创建的示例站点 \`/life\`，你可以直接在 **Strapi 管理后台** 编辑或删除本篇文章，也可以新增更多独立站点（例如 \`/tech\`、\`/notes\`、\`/travel\` 等）。
 
-### 核心联动 YAML 示例
+### 快速上手清单
 
-下面是一个根据人体存在传感器与光照度自动开灯的示例：
+- [x] 通过 Docker Compose 一键启动 Nginx + Next.js + Strapi
+- [ ] 进入 \`/admin\` 注册管理员账号，并在 **Site** 中切换喜欢的主题风格（\`default\` / \`warm\` / \`anime\` / \`cyber\`）
+- [ ] 根据需要添加更多子站点、分类、标签与多语言内容
+- [ ] 如需 AI 辅助写作，可在后台创建 Admin API Token 并接入 \`/mcp\`
 
-\`\`\`yaml
-alias: "客厅夜间自动补光"
-description: "有人移动且照度低于 30 lx 时开启氛围灯"
-trigger:
-  - platform: state
-    entity_id: binary_sensor.living_room_presence
-    to: "on"
-condition:
-  - condition: numeric_state
-    entity_id: sensor.living_room_illuminance
-    below: 30
-action:
-  - service: light.turn_on
-    target:
-      entity_id: light.living_room_ambient
-    data:
-      brightness_pct: 45
-      kelvin: 3200
-mode: single
-\`\`\`
+### Markdown 能力演示
 
-### 推荐硬件清单
-
-| 设备类型 | 通信协议 | 推荐理由 |
-| :--- | :--- | :--- |
-| 毫米波存在传感器 | Zigbee / Wi-Fi | 静止人体也能稳定识别 |
-| 智能墙壁开关（零火） | Zigbee 3.0 | 兼作路由中继，网络更稳定 |
-| USB 温湿度计 | ESPHome (BLE) | 成本极低，刷机即可接入 |
-
-> 提示：你可以通过 Strapi 内置的 **MCP Server** 让 AI 助手直接帮你生成并发布新的自动化教程文章。
-`;
-
-  const haArticleEn = `## Why Local-First Smart Home Matters
-
-Relying on cloud servers for every motion event adds latency and breaks automations when your ISP goes down. With **Home Assistant** and Zigbee2MQTT, every rule executes locally in milliseconds.
-
-### Sample Automation YAML
-
-Here is a practical blueprint combining mmWave presence detection with ambient lux levels:
+文章正文原生使用 **Markdown** 编写，支持 GFM 表格、数学公式与代码语法高亮：
 
 \`\`\`yaml
-alias: "Living Room Evening Ambient Light"
-description: "Turn on ambient lighting when occupied and dark"
-trigger:
-  - platform: state
-    entity_id: binary_sensor.living_room_presence
-    to: "on"
-condition:
-  - condition: numeric_state
-    entity_id: sensor.living_room_illuminance
-    below: 30
-action:
-  - service: light.turn_on
-    target:
-      entity_id: light.living_room_ambient
-    data:
-      brightness_pct: 45
-      kelvin: 3200
-mode: single
+site:
+  slug: life
+  theme: warm # 可选: default | warm | anime | cyber
+  accentColor: "#f59e0b"
 \`\`\`
 
-### Recommended Hardware Matrix
-
-| Device | Protocol | Why It Works |
+| 内置主题 | 风格特点 | 适用场景 |
 | :--- | :--- | :--- |
-| mmWave Presence Sensor | Zigbee / Wi-Fi | Detects stationary occupants reliably |
-| Neutral Wall Switch | Zigbee 3.0 | Acts as a mesh router for stability |
-| BLE Hygrometer | ESPHome | Low cost and easy local flashing |
+| \`default\` | 现代极简编辑风，清晰克制 | 通用博客、个人主页 |
+| \`warm\` | 暖意纸感手帐，衬线标题与柔和圆角 | 生活随笔、读书笔记、咖啡日常 |
+| \`anime\` | 樱花霓虹二次元手账，渐变光晕与描边卡片 | ACG 杂谈、游戏日志、创意记录 |
+| \`cyber\` | 科技矩阵终端风，等宽元数据与霓虹高亮 | 技术专栏、开发笔记、极客实验 |
 
-> Tip: Strapi v5 ships with a built-in **MCP Server** so your AI coding assistant can draft and publish Markdown guides directly.
+> 在页面底部可以看到内置的嵌套评论区；评论支持在 Strapi 后台集中管理与敏感词过滤。
 `;
 
-  const haArticle = await strapi.documents('api::article.article').create({
+  const welcomeEn = `## Welcome to Strapi Multi-Site Blog
+
+Your blog is up and running! This is the starter \`/life\` site. Feel free to edit or remove this sample post in **Strapi Admin**, switch themes, or create additional independent sub-blogs (such as \`/tech\`, \`/notes\`, or \`/travel\`).
+
+### Quick Start Checklist
+
+- [x] Boot Nginx + Next.js + Strapi with Docker Compose
+- [ ] Sign in at \`/admin\` to create your admin account and pick a built-in theme (\`default\` / \`warm\` / \`anime\` / \`cyber\`) on any **Site**
+- [ ] Add more sites, categories, tags, and multilingual entries
+- [ ] Optionally generate an Admin API Token in Strapi to write posts via \`/mcp\`
+
+### Markdown Showcase
+
+Posts are written in native **Markdown** with GFM tables, KaTeX math, and syntax-highlighted code blocks:
+
+\`\`\`yaml
+site:
+  slug: life
+  theme: warm # Options: default | warm | anime | cyber
+  accentColor: "#f59e0b"
+\`\`\`
+
+| Theme | Aesthetic | Best For |
+| :--- | :--- | :--- |
+| \`default\` | Clean Swiss-inspired editorial layout | General blogs & portfolios |
+| \`warm\` | Cozy linen tones & serif headings | Lifestyle journals & essays |
+| \`anime\` | Sakura-violet gradient & manga-style cards | ACG logs, gaming & creative notes |
+| \`cyber\` | Matrix grid, monospace badges & neon accents | Engineering logs & tech sites |
+
+> Scroll down to try the built-in nested comment section, managed directly inside Strapi Admin.
+`;
+
+  const welcomeArticle = await strapi.documents('api::article.article').create({
     locale: primaryLocale,
     data: {
       title:
         primaryLocale === 'zh-Hans'
-          ? '从零搭建高稳定本地化 Home Assistant 自动化体系'
-          : 'Building a Rock-Solid Local Home Assistant Automation Setup',
-      slug: 'local-home-assistant-automation-guide',
+          ? '欢迎使用：多站点 Markdown 博客快速指南'
+          : 'Welcome: Quick Guide to Your Multi-Site Markdown Blog',
+      slug: 'welcome-to-your-blog',
       summary:
         primaryLocale === 'zh-Hans'
-          ? '如何结合毫米波雷达、Zigbee2MQTT 与 YAML Blueprint 打造断网也能毫秒级响应的智能家居。'
-          : 'Combine mmWave sensors, Zigbee2MQTT, and YAML blueprints for millisecond local smart home control.',
-      content: primaryLocale === 'zh-Hans' ? haArticleZh : haArticleEn,
-      authorName: 'Wei',
-      publishedDate: new Date().toISOString().slice(0, 10),
-      featured: true,
-      allowComments: true,
-      site: haSite.documentId,
-      category: haCat.documentId,
-      tags: [tagHa.documentId],
-    },
-  });
-  await strapi.documents('api::article.article').publish({ documentId: haArticle.documentId, locale: primaryLocale });
-
-  if (hasZh && hasEn) {
-    await strapi.documents('api::article.article').create({
-      documentId: haArticle.documentId,
-      locale: 'en',
-      data: {
-        title: 'Building a Rock-Solid Local Home Assistant Automation Setup',
-        slug: 'local-home-assistant-automation-guide',
-        summary: 'Combine mmWave sensors, Zigbee2MQTT, and YAML blueprints for millisecond local smart home control.',
-        content: haArticleEn,
-        authorName: 'Wei',
-        publishedDate: new Date().toISOString().slice(0, 10),
-        featured: true,
-        allowComments: true,
-        site: haSite.documentId,
-        category: haCat.documentId,
-        tags: [tagHa.documentId],
-      },
-    });
-    await strapi.documents('api::article.article').publish({ documentId: haArticle.documentId, locale: 'en' });
-  }
-
-  const lifeArticleZh = `## 清晨十分钟的手冲仪式
-
-工作再忙，每天早晨给自己留出十分钟研磨、注水、闻香，依然是一天中最治愈的锚点。
-
-### 本周豆单记录：耶加雪菲 · 水洗
-
-* **粉水比**：1 : 15（15g 粉 / 225g 水）
-* **水温**：91°C
-* **三段式注水**：
-  1. 闷蒸 35g，静待 30 秒
-  2. 中心绕圈注水至 140g
-  3. 尾段柔水注至 225g，总时长约 2 分 05 秒
-
-> 柑橘的明亮酸质在降温后逐渐转为蜂蜜般的甜感，非常适合作为秋日清晨的第一杯。
-
-### 写在最后
-
-这个博客空间与 \`/home-assistant\` 技术站完全分离，用来存放所有非技术向的日常记录。你可以在下方留言区分享你最近喝到最喜欢的豆子。
-`;
-
-  const lifeArticleEn = `## A Quiet Ten-Minute Pour-Over Ritual
-
-No matter how busy the week gets, taking ten slow minutes to grind beans, bloom, and pour remains the calmest anchor of my morning.
-
-### This Week's Bean: Washed Yirgacheffe
-
-* **Ratio**: 1 : 15 (15g coffee / 225g water)
-* **Water Temp**: 91°C
-* **Pour Schedule**:
-  1. Bloom with 35g for 30 seconds
-  2. Steady spiral pour up to 140g
-  3. Gentle finish to 225g, total brew ~2m 05s
-
-> Bright citrus notes soften into honey-like sweetness as the cup cools—an ideal autumn morning companion.
-
-### Closing Note
-
-This \`/life\` blog is completely separate from \`/home-assistant\`, giving everyday essays their own calm home. Feel free to leave a comment below!
-`;
-
-  const lifeArticle = await strapi.documents('api::article.article').create({
-    locale: primaryLocale,
-    data: {
-      title:
-        primaryLocale === 'zh-Hans'
-          ? '秋日清晨的一杯水洗耶加雪菲：我的 1:15 手冲笔记'
-          : 'Morning Washed Yirgacheffe: My 1:15 Pour-Over Notes',
-      slug: 'morning-yirgacheffe-pour-over-notes',
-      summary:
-        primaryLocale === 'zh-Hans'
-          ? '记录一周的粉水比实验与风味变化，在快节奏里留出安静的十分钟。'
-          : 'Logging brew ratios, water temperatures, and tasting notes for a calmer start to the day.',
-      content: primaryLocale === 'zh-Hans' ? lifeArticleZh : lifeArticleEn,
-      authorName: 'Wei',
+          ? '了解如何在 Strapi 后台切换内置主题、创建多个子站点、使用 Markdown 写作与开启评论。'
+          : 'Learn how to switch built-in themes, manage multiple sites, write in Markdown, and moderate comments.',
+      content: primaryLocale === 'zh-Hans' ? welcomeZh : welcomeEn,
+      authorName: 'Admin',
       publishedDate: new Date().toISOString().slice(0, 10),
       featured: true,
       allowComments: true,
       site: lifeSite.documentId,
       category: lifeCat.documentId,
-      tags: [tagCoffee.documentId],
+      tags: [tagGettingStarted.documentId],
     },
   });
-  await strapi.documents('api::article.article').publish({ documentId: lifeArticle.documentId, locale: primaryLocale });
+  await strapi
+    .documents('api::article.article')
+    .publish({ documentId: welcomeArticle.documentId, locale: primaryLocale });
 
   if (hasZh && hasEn) {
     await strapi.documents('api::article.article').create({
-      documentId: lifeArticle.documentId,
+      documentId: welcomeArticle.documentId,
       locale: 'en',
       data: {
-        title: 'Morning Washed Yirgacheffe: My 1:15 Pour-Over Notes',
-        slug: 'morning-yirgacheffe-pour-over-notes',
-        summary: 'Logging brew ratios, water temperatures, and tasting notes for a calmer start to the day.',
-        content: lifeArticleEn,
-        authorName: 'Wei',
+        title: 'Welcome: Quick Guide to Your Multi-Site Markdown Blog',
+        slug: 'welcome-to-your-blog',
+        summary:
+          'Learn how to switch built-in themes, manage multiple sites, write in Markdown, and moderate comments.',
+        content: welcomeEn,
+        authorName: 'Admin',
         publishedDate: new Date().toISOString().slice(0, 10),
         featured: true,
         allowComments: true,
         site: lifeSite.documentId,
         category: lifeCat.documentId,
-        tags: [tagCoffee.documentId],
+        tags: [tagGettingStarted.documentId],
       },
     });
-    await strapi.documents('api::article.article').publish({ documentId: lifeArticle.documentId, locale: 'en' });
+    await strapi.documents('api::article.article').publish({ documentId: welcomeArticle.documentId, locale: 'en' });
   }
 
   strapi.log.info('[Bootstrap] Demo content seeded successfully.');
@@ -546,7 +376,6 @@ This \`/life\` blog is completely separate from \`/home-assistant\`, giving ever
 
 export default {
   register({ strapi }: { strapi: Core.Strapi }) {
-    // Auto-fill slug from title/name when creating entries via Admin or MCP if slug is omitted
     const slugTargets = new Set([
       'api::article.article',
       'api::site.site',

@@ -12,3 +12,19 @@ html {
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
 }
+
+.font-editorial-serif {
+  font-family: Georgia, "Noto Serif SC", "Songti SC", "STSong", "Times New Roman", serif;
+}
+
+.bg-cyber-grid {
+  background-image:
+    linear-gradient(to right, rgba(6, 182, 212, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(6, 182, 212, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.bg-anime-dots {
+  background-image: radial-gradient(rgba(236, 72, 153, 0.14) 1px, transparent 1px);
+  background-size: 22px 22px;
+}

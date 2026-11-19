@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
-import { getSupportedLocales } from '@/lib/env';
+import { getDefaultTheme, getSupportedLocales } from '@/lib/env';
 import { getDictionary, normalizeLocale } from '@/lib/i18n';
 import { getArticles, getGlobalConfig, getSiteBySlug, getSites } from '@/lib/strapi';
-import { activeTheme } from '@/themes';
+import { getTheme } from '@/themes';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +37,7 @@ export default async function SearchPage({
     notFound();
   }
 
-  const { SearchView } = activeTheme;
+  const { SearchView } = getTheme(site.theme || global?.defaultTheme || getDefaultTheme());
 
   return (
     <SearchView

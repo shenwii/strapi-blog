@@ -49,6 +49,16 @@
         }
       }
     },
+    "defaultTheme": {
+      "type": "enumeration",
+      "enum": ["default", "warm", "anime", "cyber"],
+      "default": "default",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
     "seo": {
       "type": "component",
       "repeatable": false,

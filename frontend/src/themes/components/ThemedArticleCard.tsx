@@ -4,14 +4,17 @@ import { ArrowRight, Calendar, Clock } from 'lucide-react';
 import { buildHref, formatDate, type Dictionary } from '@/lib/i18n';
 import { estimateReadingTime } from '@/lib/markdown';
 import { resolveMediaUrl, type Article } from '@/lib/strapi';
+import type { ThemeSkin } from '../skins';
 
-export function ArticleCard({
+export function ThemedArticleCard({
+  skin,
   article,
   siteSlug,
   locale,
   dict,
   featuredLayout = false,
 }: {
+  skin: ThemeSkin;
   article: Article;
   siteSlug: string;
   locale: string;
@@ -25,14 +28,14 @@ export function ArticleCard({
 
   return (
     <article
-      className={`group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg dark:border-slate-800/90 dark:bg-slate-900/70 dark:hover:border-slate-700 ${
+      className={`group flex flex-col overflow-hidden transition ${skin.cardClass} ${
         featuredLayout ? 'md:grid md:grid-cols-12 md:items-stretch' : ''
       }`}
     >
       {coverUrl && (
         <Link
           href={href}
-          className={`relative block overflow-hidden bg-slate-100 dark:bg-slate-800 ${
+          className={`relative block overflow-hidden bg-slate-200/50 dark:bg-slate-800/50 ${
             featuredLayout ? 'aspect-[16/10] md:col-span-5 md:aspect-auto' : 'aspect-[16/9]'
           }`}
         >
@@ -44,45 +47,64 @@ export function ArticleCard({
         </Link>
       )}
 
-      <div className={`flex flex-1 flex-col justify-between p-6 ${featuredLayout && coverUrl ? 'md:col-span-7' : featuredLayout ? 'md:col-span-12' : ''}`}>
+      <div
+        className={`flex flex-1 flex-col justify-between p-6 ${
+          featuredLayout && coverUrl ? 'md:col-span-7' : featuredLayout ? 'md:col-span-12' : ''
+        }`}
+      >
         <div>
+          {featuredLayout && skin.variant === 'cyber' && (
+            <div className="mb-3 flex items-center gap-1.5 font-mono text-[11px] text-cyan-500/80">
+              <span className="h-2 w-2 rounded-full bg-rose-500/80" />
+              <span className="h-2 w-2 rounded-full bg-amber-400/80" />
+              <span className="h-2 w-2 rounded-full bg-emerald-400/80" />
+              <span className="ml-2">~/featured/{article.slug}.md</span>
+            </div>
+          )}
+
           <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
             {article.featured && (
-              <span className="rounded-full bg-[var(--site-accent,#0ea5e9)]/15 px-2.5 py-0.5 font-medium text-[var(--site-accent,#0ea5e9)]">
+              <span className="rounded-full bg-[var(--site-accent,#0ea5e9)]/15 px-2.5 py-0.5 font-semibold text-[var(--site-accent,#0ea5e9)]">
                 {dict.featured}
               </span>
             )}
             {article.category && (
               <Link
                 href={buildHref(locale, `/${siteSlug}/categories/${article.category.slug}`)}
-                className="rounded-full bg-slate-100 px-2.5 py-0.5 font-medium text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                className={`px-2.5 py-0.5 font-medium transition ${skin.chipClass}`}
               >
                 {article.category.name}
               </Link>
             )}
             {article.site && (
-              <span className="text-slate-400 dark:text-slate-500">/{article.site.slug}</span>
+              <span className={skin.variant === 'cyber' ? 'font-mono text-cyan-500/80' : 'opacity-50'}>
+                /{article.site.slug}
+              </span>
             )}
           </div>
 
           <Link href={href}>
             <h3
-              className={`font-bold tracking-tight text-slate-900 transition group-hover:text-[var(--site-accent,#0ea5e9)] dark:text-slate-100 ${
-                featuredLayout ? 'text-2xl sm:text-3xl' : 'text-xl'
-              }`}
+              className={`font-bold transition group-hover:text-[var(--site-accent,#0ea5e9)] ${
+                skin.headingClass
+              } ${featuredLayout ? 'text-2xl sm:text-3xl' : 'text-xl'}`}
             >
               {article.title}
             </h3>
           </Link>
 
           {article.summary && (
-            <p className="mt-2.5 line-clamp-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+            <p className="mt-2.5 line-clamp-3 text-sm leading-relaxed opacity-75">
               {article.summary}
             </p>
           )}
         </div>
 
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs text-slate-500 dark:border-slate-800/80 dark:text-slate-400">
+        <div
+          className={`mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/60 pt-4 text-xs opacity-70 dark:border-slate-800/70 ${
+            skin.variant === 'cyber' ? 'font-mono' : ''
+          }`}
+        >
           <div className="flex items-center gap-4">
             {date && (
               <span className="inline-flex items-center gap-1.5">
@@ -98,7 +120,7 @@ export function ArticleCard({
 
           <Link
             href={href}
-            className="inline-flex items-center gap-1 font-medium text-slate-900 transition group-hover:text-[var(--site-accent,#0ea5e9)] dark:text-slate-200"
+            className="inline-flex items-center gap-1 font-semibold transition group-hover:text-[var(--site-accent,#0ea5e9)]"
           >
             <span>{dict.readMore}</span>
             <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />

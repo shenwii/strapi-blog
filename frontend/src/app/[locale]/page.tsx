@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { getDefaultSiteSlug, getPortalName, getSupportedLocales } from '@/lib/env';
+import { getDefaultSiteSlug, getDefaultTheme, getPortalName, getSupportedLocales } from '@/lib/env';
 import { buildHref, getDictionary, normalizeLocale } from '@/lib/i18n';
 import { getArticles, getGlobalConfig, getSites } from '@/lib/strapi';
-import { activeTheme } from '@/themes';
+import { getTheme } from '@/themes';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +43,7 @@ export default async function PortalPage({
     redirect(buildHref(locale, `/${defaultSiteSlug}`));
   }
 
-  const { PortalView } = activeTheme;
+  const { PortalView } = getTheme(global?.defaultTheme || getDefaultTheme());
 
   return (
     <PortalView

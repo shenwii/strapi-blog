@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getSupportedLocales, isCommentsEnabled } from '@/lib/env';
+import { getDefaultTheme, getSupportedLocales, isCommentsEnabled } from '@/lib/env';
 import { getDictionary, normalizeLocale } from '@/lib/i18n';
 import { estimateReadingTime, extractToc, rewriteMarkdownMediaUrls } from '@/lib/markdown';
 import {
@@ -9,7 +9,7 @@ import {
   getSiteBySlug,
   getSites,
 } from '@/lib/strapi';
-import { activeTheme } from '@/themes';
+import { getTheme } from '@/themes';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,7 +63,7 @@ export default async function ArticleDetailPage({
   const toc = extractToc(renderedContent);
   const readingTime = article.readingTime || estimateReadingTime(renderedContent);
 
-  const { ArticleDetailView } = activeTheme;
+  const { ArticleDetailView } = getTheme(site.theme || global?.defaultTheme || getDefaultTheme());
 
   return (
     <ArticleDetailView

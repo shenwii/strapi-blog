@@ -5,7 +5,7 @@
     "singularName": "site",
     "pluralName": "sites",
     "displayName": "Site",
-    "description": "Independent sub-blog / channel (e.g. /home-assistant, /life)"
+    "description": "Independent sub-blog / channel (e.g. /life, /tech)"
   },
   "options": {
     "draftAndPublish": true
@@ -61,6 +61,16 @@
     "accentColor": {
       "type": "string",
       "default": "#0ea5e9",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
+    "theme": {
+      "type": "enumeration",
+      "enum": ["default", "warm", "anime", "cyber"],
+      "default": "default",
       "pluginOptions": {
         "i18n": {
           "localized": false

@@ -33,6 +33,10 @@ export function getDefaultSiteSlug(): string {
   return (process.env.DEFAULT_SITE_SLUG || '').trim();
 }
 
+export function getDefaultTheme(): string {
+  return (process.env.DEFAULT_THEME || 'default').trim();
+}
+
 export function getPortalName(): string {
   return process.env.NEXT_PUBLIC_PORTAL_NAME || 'Strapi Multi-Site Blog';
 }

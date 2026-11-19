@@ -31,7 +31,7 @@ export function proxy(request: NextRequest) {
   const segments = pathname.split('/').filter(Boolean);
   const firstSegment = segments[0];
 
-  // If URL already starts with a supported locale (e.g. /en/home-assistant or /zh-Hans/life), let Next.js route directly
+  // If URL already starts with a supported locale (e.g. /en/life or /zh-Hans/life), let Next.js route directly
   if (firstSegment && supportedLocales.includes(firstSegment)) {
     return NextResponse.next();
   }
@@ -44,7 +44,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Rewrite paths without locale prefix (e.g. /, /home-assistant, /life) to default locale internally
+  // Rewrite paths without locale prefix (e.g. /, /life, /tech) to default locale internally
   const url = request.nextUrl.clone();
   url.pathname = pathname === '/' ? `/${defaultLocale}` : `/${defaultLocale}${pathname}`;
   return NextResponse.rewrite(url);

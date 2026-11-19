@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getSupportedLocales } from '@/lib/env';
+import { getDefaultTheme, getSupportedLocales } from '@/lib/env';
 import { getDictionary, normalizeLocale } from '@/lib/i18n';
 import {
   getArticles,
@@ -8,7 +8,7 @@ import {
   getSiteBySlug,
   getSites,
 } from '@/lib/strapi';
-import { activeTheme } from '@/themes';
+import { getTheme } from '@/themes';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +39,7 @@ export default async function CategoryPage({
   }
 
   const category = categories.find((c) => c.slug === slug);
-  const { TaxonomyView } = activeTheme;
+  const { TaxonomyView } = getTheme(site.theme || global?.defaultTheme || getDefaultTheme());
 
   return (
     <TaxonomyView

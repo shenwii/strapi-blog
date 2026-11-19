@@ -1,11 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
-import { Globe, Rss, Search } from 'lucide-react';
+import { Globe, Rss, Search, Sparkles, Terminal } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { buildHref, getLocaleLabel, type Dictionary } from '@/lib/i18n';
 import type { Site } from '@/lib/strapi';
+import type { ThemeSkin } from '../skins';
 
-export function SiteHeader({
+export function ThemedHeader({
+  skin,
   locale,
   supportedLocales,
   dict,
@@ -14,6 +16,7 @@ export function SiteHeader({
   currentPathWithoutLocale,
   portalTitle,
 }: {
+  skin: ThemeSkin;
   locale: string;
   supportedLocales: string[];
   dict: Dictionary;
@@ -22,11 +25,11 @@ export function SiteHeader({
   currentPathWithoutLocale: string;
   portalTitle: string;
 }) {
-  const accent = currentSite?.accentColor || '#0ea5e9';
+  const accent = currentSite?.accentColor || skin.defaultAccent;
 
   return (
     <header
-      className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/85"
+      className={`sticky top-0 z-40 ${skin.headerClass}`}
       style={{ '--site-accent': accent } as React.CSSProperties}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
@@ -35,11 +38,21 @@ export function SiteHeader({
             href={currentSite ? buildHref(locale, `/${currentSite.slug}`) : buildHref(locale, '/')}
             className="flex items-center gap-2.5 truncate"
           >
+            {skin.variant === 'cyber' ? (
+              <Terminal className="h-4 w-4 shrink-0 text-cyan-500" />
+            ) : skin.variant === 'anime' ? (
+              <Sparkles className="h-4 w-4 shrink-0 text-pink-500" />
+            ) : (
+              <span
+                className="inline-block h-3 w-3 shrink-0 rounded-full"
+                style={{ backgroundColor: accent }}
+              />
+            )}
             <span
-              className="inline-block h-3 w-3 shrink-0 rounded-full"
-              style={{ backgroundColor: accent }}
-            />
-            <span className="truncate text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
+              className={`truncate text-lg font-bold ${skin.headingClass} ${
+                skin.titleGradientClass || ''
+              }`}
+            >
               {currentSite ? currentSite.name : portalTitle}
             </span>
           </Link>
@@ -48,10 +61,10 @@ export function SiteHeader({
             <nav className="hidden items-center gap-1 md:flex" aria-label="Sites">
               <Link
                 href={buildHref(locale, '/')}
-                className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                className={`px-2.5 py-1.5 text-xs font-medium transition ${
                   !currentSite
-                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900'
+                    ? skin.chipActiveClass
+                    : 'rounded-lg text-slate-600 hover:bg-slate-500/10 dark:text-slate-300'
                 }`}
               >
                 {dict.allSites}
@@ -62,10 +75,10 @@ export function SiteHeader({
                   <Link
                     key={s.documentId}
                     href={buildHref(locale, `/${s.slug}`)}
-                    className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                    className={`px-2.5 py-1.5 text-xs font-medium transition ${
                       active
-                        ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-                        : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900'
+                        ? skin.chipActiveClass
+                        : 'rounded-lg text-slate-600 hover:bg-slate-500/10 dark:text-slate-300'
                     }`}
                   >
                     {s.name}
@@ -83,7 +96,7 @@ export function SiteHeader({
                 href={buildHref(locale, `/${currentSite.slug}/search`)}
                 aria-label={dict.searchButton}
                 title={dict.searchButton}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-700 dark:hover:text-white"
+                className={`inline-flex h-9 w-9 items-center justify-center transition ${skin.secondaryButtonClass}`}
               >
                 <Search className="h-4 w-4" />
               </Link>
@@ -91,7 +104,7 @@ export function SiteHeader({
                 href={buildHref(locale, `/${currentSite.slug}/rss.xml`)}
                 aria-label={dict.rssFeed}
                 title={dict.rssFeed}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-700 dark:hover:text-white"
+                className={`inline-flex h-9 w-9 items-center justify-center transition ${skin.secondaryButtonClass}`}
               >
                 <Rss className="h-4 w-4" />
               </a>
@@ -99,18 +112,16 @@ export function SiteHeader({
           )}
 
           {supportedLocales.length > 1 && (
-            <div className="inline-flex items-center rounded-xl border border-slate-200 bg-white p-0.5 dark:border-slate-800 dark:bg-slate-900">
-              <Globe className="ml-2 mr-1 hidden h-3.5 w-3.5 text-slate-400 sm:inline" />
+            <div className={`inline-flex items-center p-0.5 ${skin.secondaryButtonClass}`}>
+              <Globe className="ml-2 mr-1 hidden h-3.5 w-3.5 opacity-60 sm:inline" />
               {supportedLocales.map((loc) => {
                 const active = loc === locale;
                 return (
                   <Link
                     key={loc}
                     href={buildHref(loc, currentPathWithoutLocale)}
-                    className={`rounded-lg px-2 py-1 text-xs font-medium transition ${
-                      active
-                        ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-                        : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                    className={`px-2 py-1 text-xs font-medium transition ${
+                      active ? skin.chipActiveClass : 'opacity-75 hover:opacity-100'
                     }`}
                   >
                     {getLocaleLabel(loc)}
@@ -125,7 +136,7 @@ export function SiteHeader({
       </div>
 
       {currentSite?.navLinks && currentSite.navLinks.length > 0 && (
-        <div className="border-t border-slate-100 dark:border-slate-900">
+        <div className={skin.subNavBorderClass}>
           <div className="mx-auto flex max-w-6xl items-center gap-4 overflow-x-auto px-4 py-2 text-xs sm:px-6">
             {currentSite.navLinks.map((link, idx) =>
               link.isExternal ? (
@@ -134,7 +145,7 @@ export function SiteHeader({
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="shrink-0 font-medium text-slate-600 transition hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  className="shrink-0 font-medium opacity-75 transition hover:opacity-100"
                 >
                   {link.label}
                 </a>
@@ -142,7 +153,7 @@ export function SiteHeader({
                 <Link
                   key={`${link.href}-${idx}`}
                   href={buildHref(locale, link.href)}
-                  className="shrink-0 font-medium text-slate-600 transition hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  className="shrink-0 font-medium opacity-75 transition hover:opacity-100"
                 >
                   {link.label}
                 </Link>
