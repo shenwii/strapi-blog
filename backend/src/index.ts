@@ -161,7 +161,7 @@ async function seedDemoData(strapi: Core.Strapi, locales: string[]) {
         footerText: 'Powered by Strapi v5 & Next.js',
         defaultSiteSlug: process.env.DEFAULT_SITE_SLUG || '',
         defaultTheme: validTheme,
-      },
+      } as any,
     });
   }
 
@@ -205,7 +205,7 @@ async function seedDemoData(strapi: Core.Strapi, locales: string[]) {
         theme: validTheme,
         sortOrder: 1,
         navLinks: [{ label: 'Posts', href: '/life', isExternal: false }],
-      },
+      } as any,
     });
     await strapi.documents('api::site.site').publish({ documentId: lifeSite.documentId, locale: 'en' });
   }
@@ -231,7 +231,7 @@ async function seedDemoData(strapi: Core.Strapi, locales: string[]) {
         slug: 'essays',
         description: 'Everyday stories & reflections',
         site: lifeSite.documentId,
-      },
+      } as any,
     });
     await strapi.documents('api::category.category').publish({ documentId: lifeCat.documentId, locale: 'en' });
   }
@@ -250,7 +250,7 @@ async function seedDemoData(strapi: Core.Strapi, locales: string[]) {
     await strapi.documents('api::tag.tag').update({
       documentId: tagGettingStarted.documentId,
       locale: 'en',
-      data: { name: 'Getting Started', slug: 'getting-started' },
+      data: { name: 'Getting Started', slug: 'getting-started' } as any,
     });
     await strapi.documents('api::tag.tag').publish({
       documentId: tagGettingStarted.documentId,
@@ -366,7 +366,7 @@ site:
         site: lifeSite.documentId,
         category: lifeCat.documentId,
         tags: [tagGettingStarted.documentId],
-      },
+      } as any,
     });
     await strapi.documents('api::article.article').publish({ documentId: welcomeArticle.documentId, locale: 'en' });
   }
