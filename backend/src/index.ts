@@ -374,8 +374,75 @@ site:
   strapi.log.info('[Bootstrap] Demo content seeded successfully.');
 }
 
+async function disablePublicMembership(strapi: Core.Strapi) {
+  try {
+    const pluginStore = strapi.store({
+      type: 'plugin',
+      name: 'users-permissions',
+    });
+
+    const advancedSettings = (await pluginStore.get({ key: 'advanced' })) as
+      | Record<string, unknown>
+      | null;
+
+    if (advancedSettings && advancedSettings.allow_register !== false) {
+      await pluginStore.set({
+        key: 'advanced',
+        value: {
+          ...advancedSettings,
+          allow_register: false,
+        },
+      });
+      strapi.log.info('[Bootstrap] Disabled public user registration (allow_register=false).');
+    }
+
+    const publicRole = await strapi.db.query('plugin::users-permissions.role').findOne({
+      where: { type: 'public' },
+    });
+
+    if (publicRole) {
+      const authActions = [
+        'plugin::users-permissions.auth.callback',
+        'plugin::users-permissions.auth.connect',
+        'plugin::users-permissions.auth.emailConfirmation',
+        'plugin::users-permissions.auth.forgotPassword',
+        'plugin::users-permissions.auth.register',
+        'plugin::users-permissions.auth.resetPassword',
+        'plugin::users-permissions.auth.sendEmailConfirmation',
+      ];
+      await strapi.db.query('plugin::users-permissions.permission').deleteMany({
+        where: {
+          role: publicRole.id,
+          action: { $in: authActions },
+        },
+      });
+    }
+  } catch (error) {
+    strapi.log.warn(`[Bootstrap] Membership lockdown warning: ${(error as Error).message}`);
+  }
+}
+
 export default {
   register({ strapi }: { strapi: Core.Strapi }) {
+    // Hide end-user model from Content Manager (this blog has no reader membership UI;
+    // users-permissions is retained only for Public API roles and strapi-plugin-comments).
+    const endUserModel = strapi.contentType('plugin::users-permissions.user') as
+      | { pluginOptions?: Record<string, Record<string, unknown>> }
+      | undefined;
+    if (endUserModel) {
+      endUserModel.pluginOptions = {
+        ...(endUserModel.pluginOptions || {}),
+        'content-manager': {
+          ...(endUserModel.pluginOptions?.['content-manager'] || {}),
+          visible: false,
+        },
+        'content-type-builder': {
+          ...(endUserModel.pluginOptions?.['content-type-builder'] || {}),
+          visible: false,
+        },
+      };
+    }
+
     const slugTargets = new Set([
       'api::article.article',
       'api::site.site',
@@ -407,6 +474,7 @@ export default {
 
     await ensureLocales(strapi, locales, defaultLocale);
     await ensurePublicPermissions(strapi);
+    await disablePublicMembership(strapi);
 
     if ((process.env.SEED_DEMO_DATA ?? 'true').toLowerCase() === 'true') {
       await seedDemoData(strapi, locales);
