@@ -152,7 +152,7 @@ async function seedDemoData(strapi: Core.Strapi, locales: string[]) {
   });
 
   if (hasZh && hasEn) {
-    await strapi.documents('api::global.global').create({
+    await strapi.documents('api::global.global').update({
       documentId: globalDoc.documentId,
       locale: 'en',
       data: {
@@ -191,7 +191,7 @@ async function seedDemoData(strapi: Core.Strapi, locales: string[]) {
   await strapi.documents('api::site.site').publish({ documentId: lifeSite.documentId, locale: primaryLocale });
 
   if (hasZh && hasEn) {
-    await strapi.documents('api::site.site').create({
+    await strapi.documents('api::site.site').update({
       documentId: lifeSite.documentId,
       locale: 'en',
       data: {
@@ -223,7 +223,7 @@ async function seedDemoData(strapi: Core.Strapi, locales: string[]) {
   await strapi.documents('api::category.category').publish({ documentId: lifeCat.documentId, locale: primaryLocale });
 
   if (hasZh && hasEn) {
-    await strapi.documents('api::category.category').create({
+    await strapi.documents('api::category.category').update({
       documentId: lifeCat.documentId,
       locale: 'en',
       data: {
@@ -247,7 +247,7 @@ async function seedDemoData(strapi: Core.Strapi, locales: string[]) {
   });
 
   if (hasZh && hasEn) {
-    await strapi.documents('api::tag.tag').create({
+    await strapi.documents('api::tag.tag').update({
       documentId: tagGettingStarted.documentId,
       locale: 'en',
       data: { name: 'Getting Started', slug: 'getting-started' },
@@ -350,7 +350,7 @@ site:
     .publish({ documentId: welcomeArticle.documentId, locale: primaryLocale });
 
   if (hasZh && hasEn) {
-    await strapi.documents('api::article.article').create({
+    await strapi.documents('api::article.article').update({
       documentId: welcomeArticle.documentId,
       locale: 'en',
       data: {
