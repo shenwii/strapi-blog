@@ -1,0 +1,40 @@
+name: Release Docker Image
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USER }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Extract version from tag
+        id: vars
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build & Push Docker image
+        run: |
+          for image_id in backend frontend; do
+            IMAGE=ghcr.io/${{ secrets.GHCR_USER }}/strapi-blog-${image_id}
+            docker buildx build --platform linux/amd64,linux/arm64 --provenance=false --sbom=false -t $IMAGE:${{ steps.vars.outputs.version }} -t $IMAGE:latest --push ${image_id}
+          done
