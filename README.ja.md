@@ -91,7 +91,7 @@ cp .env.example .env
 ## Strapi MCP を使った AI 記事執筆
 
 1. `http://localhost:8080/admin` にログインします。
-2. **Settings -> Admin API Tokens**（または **API Tokens**）から必要な権限を持つトークンを作成します。
+2. **Settings -> Administration Panel -> Admin Tokens**（注意：`Settings -> API Tokens` は `/api/*` 専用のため、`/mcp` に使うと `401` になります）から必要な権限を持つ Admin Token を作成します。
 3. Cursor や Claude Desktop などの MCP クライアントに以下を設定します：
    * **URL：** `http://localhost:8080/mcp`
    * **Header：** `Authorization: Bearer <YOUR_ADMIN_TOKEN>`

@@ -91,7 +91,7 @@ cp .env.example .env
 ## 使用 Strapi MCP 用 AI 写博客
 
 1. 登录 `http://localhost:8080/admin`。
-2. 进入 **Settings -> Admin API Tokens**（或 **API Tokens**）生成具备内容管理权限的 Token。
+2. 进入 **Settings -> Administration Panel -> Admin Tokens**（注意：不要使用 **Settings -> API Tokens**，后者仅用于 `/api/*` 前台接口，用于 `/mcp` 会返回 `401`）生成具备内容管理权限的 Admin Token。
 3. 在 Cursor / Claude Desktop 等支持 HTTP Streamable MCP 的客户端中配置：
    * **URL**：`http://localhost:8080/mcp`
    * **Authorization**：`Bearer <YOUR_ADMIN_TOKEN>`

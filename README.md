@@ -91,7 +91,7 @@ Assuming `APP_PORT=8080` in `.env`:
 ## Writing Posts via Strapi MCP
 
 1. Log in to `http://localhost:8080/admin`.
-2. Go to **Settings -> Admin API Tokens** (or **API Tokens**) and create a token with the desired Content Manager permissions.
+2. Go to **Settings -> Administration Panel -> Admin Tokens** (note: do **not** use *Settings -> API Tokens*, which is only for `/api/*` and returns `401` on `/mcp`) and create an Admin Token with the desired permissions.
 3. Configure your MCP-compatible client (e.g., Cursor or Claude Desktop):
    * **URL:** `http://localhost:8080/mcp`
    * **Header:** `Authorization: Bearer <YOUR_ADMIN_TOKEN>`
