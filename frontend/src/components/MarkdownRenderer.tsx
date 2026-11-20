@@ -8,6 +8,16 @@ import rehypeHighlight from 'rehype-highlight';
 import rehypeKatex from 'rehype-katex';
 import rehypeSlug from 'rehype-slug';
 import { Check, Copy } from 'lucide-react';
+import { MermaidBlock } from './MermaidBlock';
+
+function extractText(node: React.ReactNode): string {
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(extractText).join('');
+  if (React.isValidElement<{ children?: React.ReactNode }>(node)) {
+    return extractText(node.props.children);
+  }
+  return '';
+}
 
 function CodeBlock({
   className,
@@ -19,15 +29,6 @@ function CodeBlock({
   const [copied, setCopied] = useState(false);
   const languageMatch = /language-([\w-]+)/.exec(className || '');
   const language = languageMatch?.[1] || '';
-
-  const extractText = (node: React.ReactNode): string => {
-    if (typeof node === 'string' || typeof node === 'number') return String(node);
-    if (Array.isArray(node)) return node.map(extractText).join('');
-    if (React.isValidElement<{ children?: React.ReactNode }>(node)) {
-      return extractText(node.props.children);
-    }
-    return '';
-  };
 
   const handleCopy = async () => {
     const text = extractText(children);
@@ -66,14 +67,22 @@ export function MarkdownRenderer({ content }: { content: string }) {
     <div className="prose prose-slate max-w-none dark:prose-invert prose-headings:scroll-mt-24 prose-headings:font-semibold prose-a:text-[var(--site-accent,#0ea5e9)] prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-pre:m-0 prose-pre:bg-transparent prose-pre:p-0">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeSlug, rehypeKatex, [rehypeHighlight, { ignoreMissing: true }]]}
+        rehypePlugins={[
+          rehypeSlug,
+          rehypeKatex,
+          [rehypeHighlight, { ignoreMissing: true, plainText: ['mermaid'] }],
+        ]}
         components={{
           pre({ children }) {
             const child = React.Children.only(children) as React.ReactElement<{
               className?: string;
               children?: React.ReactNode;
             }>;
-            return <CodeBlock className={child?.props?.className}>{child?.props?.children}</CodeBlock>;
+            const className = child?.props?.className || '';
+            if (/\blanguage-mermaid\b/.test(className)) {
+              return <MermaidBlock chart={extractText(child?.props?.children)} />;
+            }
+            return <CodeBlock className={className}>{child?.props?.children}</CodeBlock>;
           },
           table({ children }) {
             return (
